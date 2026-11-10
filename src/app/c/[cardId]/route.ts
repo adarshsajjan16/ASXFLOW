@@ -10,9 +10,10 @@ export async function GET(
 
   const card = DB.getCardById(cardId);
 
-  if (!card) {
-    const errorUrl = new URL(`/card-status?card=${encodeURIComponent(cardId)}&reason=not_found`, request.url);
-    return NextResponse.redirect(errorUrl);
+  // If card is not found or not yet linked to any Google link, send directly to the Activation Link page!
+  if (!card || !card.linked || !card.destinationUrl) {
+    const activateUrl = new URL(`/activate?card=${encodeURIComponent(cardId.toUpperCase())}`, request.url);
+    return NextResponse.redirect(activateUrl);
   }
 
   if (!card.active) {

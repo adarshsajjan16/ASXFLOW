@@ -147,19 +147,35 @@ function StandeePrintContent({ params }: PrintPageProps) {
           </div>
 
           {/* QR Code Container */}
-          <div className="my-2 p-3 bg-white rounded-2xl shadow-xl relative flex items-center justify-center">
+          <div className="my-1.5 p-3 bg-white rounded-2xl shadow-xl relative flex items-center justify-center">
             {qrDataUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={qrDataUrl}
                 alt={`QR code for ${cardId}`}
-                className="w-44 h-44 rounded-lg"
+                className="w-40 h-40 rounded-lg"
               />
             ) : (
-              <div className="w-44 h-44 flex items-center justify-center text-slate-500">
+              <div className="w-40 h-40 flex items-center justify-center text-slate-500">
                 <QrCode className="w-10 h-10 animate-spin" />
               </div>
             )}
+          </div>
+
+          {/* Barcode & Number Below QR (As in Reference Video) */}
+          <div className="flex flex-col items-center justify-center my-1">
+            <div className="flex items-center gap-[2px] h-5 opacity-70">
+              {[3, 1, 2, 4, 1, 3, 2, 1, 4, 2, 3, 1, 2, 4, 1, 3, 2, 1, 4].map((w, idx) => (
+                <span
+                  key={idx}
+                  className={`h-full ${styleTheme === "light" ? "bg-slate-900" : "bg-white"}`}
+                  style={{ width: `${w}px` }}
+                />
+              ))}
+            </div>
+            <div className="text-xs font-mono font-black tracking-widest mt-0.5">
+              NO: {cardId}
+            </div>
           </div>
 
           {/* Interaction Instruction Badge */}

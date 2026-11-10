@@ -23,7 +23,9 @@ import {
   Lock,
   Unlock,
   ShieldCheck,
-  KeyRound
+  KeyRound,
+  Unlink,
+  Link as LinkIcon
 } from "lucide-react";
 import { Customer, Card, ScanRecord } from "@/lib/types";
 
@@ -236,6 +238,27 @@ export default function DashboardPage() {
       }
     } catch (err) {
       console.error("Failed to save destination url", err);
+    }
+  }
+
+  async function handleUnlinkCard(cardId: string) {
+    if (!confirm(`Are you sure you want to unlink card ${cardId}? It will become blank unlinked stock ready for a new customer.`)) return;
+    try {
+      const res = await fetch(`/api/cards/link?cardId=${encodeURIComponent(cardId)}`, {
+        method: "DELETE",
+      }).then((r) => r.json());
+
+      if (res.success) {
+        setCards((prev) =>
+          prev.map((c) =>
+            c.id === cardId
+              ? { ...c, linked: false, customDestinationUrl: "", businessName: "Unlinked Stock", customerName: "Unassigned" }
+              : c
+          )
+        );
+      }
+    } catch (err) {
+      console.error("Failed to unlink card", err);
     }
   }
 
@@ -647,8 +670,21 @@ export default function DashboardPage() {
 
                           {/* Merchant */}
                           <td className="py-4 px-4">
-                            <div className="font-semibold text-white">{card.businessName}</div>
-                            <div className="text-xs text-slate-400">{card.customerName}</div>
+                            {card.linked ? (
+                              <>
+                                <div className="font-semibold text-white flex items-center gap-1.5">
+                                  <span>{card.businessName}</span>
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                                </div>
+                                <div className="text-xs text-slate-400">{card.customerName}</div>
+                              </>
+                            ) : (
+                              <div>
+                                <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-300 border border-amber-500/20">
+                                  ⚪ Unlinked Stock (Scan to link)
+                                </span>
+                              </div>
+                            )}
                           </td>
 
                           {/* Editable Destination URL */}
@@ -785,6 +821,28 @@ export default function DashboardPage() {
                             >
                               <ExternalLink className="w-3.5 h-3.5" />
                             </a>
+
+                            {/* Unlink / Link Quick Button */}
+                            {card.linked ? (
+                              <button
+                                onClick={() => handleUnlinkCard(card.id)}
+                                className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg bg-slate-800 hover:bg-amber-500/20 text-slate-400 hover:text-amber-400 border border-slate-700 hover:border-amber-500/30 text-xs font-semibold transition"
+                                title="Unlink card (make blank stock)"
+                              >
+                                <Unlink className="w-3.5 h-3.5" />
+                                <span className="hidden xl:inline">Unlink</span>
+                              </button>
+                            ) : (
+                              <Link
+                                href={`/activate?card=${card.id}`}
+                                target="_blank"
+                                className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500 hover:text-slate-950 text-emerald-400 text-xs font-semibold border border-emerald-500/30 transition"
+                                title="Link this card to a business"
+                              >
+                                <LinkIcon className="w-3.5 h-3.5" />
+                                <span className="hidden xl:inline">Link</span>
+                              </Link>
+                            )}
 
                             {/* Delete Card Button */}
                             <button

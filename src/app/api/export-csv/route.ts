@@ -20,13 +20,13 @@ export async function GET() {
   ];
 
   const rows = cards.map((c) => {
-    const cust = custMap.get(c.customerId);
+    const cust = c.customerId ? custMap.get(c.customerId) : undefined;
     const dest = c.customDestinationUrl || cust?.googleReviewUrl || "";
     return [
       c.id,
-      c.customerId,
-      `"${(cust?.businessName || "").replace(/"/g, '""')}"`,
-      `"${(cust?.name || "").replace(/"/g, '""')}"`,
+      c.customerId || "",
+      `"${(c.businessName || cust?.businessName || "").replace(/"/g, '""')}"`,
+      `"${(c.customerName || cust?.name || "").replace(/"/g, '""')}"`,
       c.active ? "YES" : "NO",
       c.nfcConfigured ? "YES" : "NO",
       c.totalScans || 0,

@@ -112,13 +112,29 @@ function PrintSheetContent() {
                   <img
                     src={qrMap[card.id]}
                     alt={card.id}
-                    className="w-32 h-32 rounded"
+                    className="w-28 h-28 rounded"
                   />
                 ) : (
-                  <div className="w-32 h-32 flex items-center justify-center text-xs text-slate-400">
+                  <div className="w-28 h-28 flex items-center justify-center text-xs text-slate-400">
                     Loading QR...
                   </div>
                 )}
+              </div>
+
+              {/* Barcode & Number (as shown in reference video) */}
+              <div className="flex flex-col items-center justify-center my-0.5">
+                <div className="flex items-center gap-[1.5px] h-3.5 opacity-70">
+                  {[3, 1, 2, 4, 1, 3, 2, 1, 4, 2, 3, 1, 2, 4].map((w, idx) => (
+                    <span
+                      key={idx}
+                      className="h-full bg-slate-900"
+                      style={{ width: `${w}px` }}
+                    />
+                  ))}
+                </div>
+                <div className="text-[10px] font-mono font-black tracking-widest text-slate-800">
+                  NO: {card.id}
+                </div>
               </div>
 
               {/* Tap or Scan Instruction */}

@@ -27,6 +27,7 @@ const INITIAL_DATA: DBData = {
     {
       id: "ABHI",
       customerId: "CUST001",
+      linked: true,
       active: true,
       nfcConfigured: true,
       totalScans: 12,
@@ -36,6 +37,7 @@ const INITIAL_DATA: DBData = {
     {
       id: "ASX001",
       customerId: "CUST001",
+      linked: true,
       active: true,
       nfcConfigured: true,
       totalScans: 52,
@@ -122,12 +124,16 @@ export const DB = {
     const customerMap = new Map(db.customers.map((c) => [c.id, c]));
 
     return db.cards.map((card) => {
-      const cust = customerMap.get(card.customerId);
+      const cust = card.customerId ? customerMap.get(card.customerId) : undefined;
+      const destination = card.customDestinationUrl || cust?.googleReviewUrl || "";
+      const isLinked = Boolean(destination && destination.trim().length > 0);
+
       return {
         ...card,
-        customerName: cust?.name || "Unknown Customer",
-        businessName: cust?.businessName || "Unknown Business",
-        customDestinationUrl: card.customDestinationUrl || cust?.googleReviewUrl || "",
+        customerName: cust?.name || "Unassigned",
+        businessName: cust?.businessName || "Unlinked Stock",
+        customDestinationUrl: destination,
+        linked: isLinked,
       };
     });
   },
@@ -137,15 +143,80 @@ export const DB = {
     const card = db.cards.find((c) => c.id.toLowerCase() === id.toLowerCase());
     if (!card) return null;
 
-    const cust = db.customers.find((c) => c.id === card.customerId);
-    const destinationUrl = card.customDestinationUrl || cust?.googleReviewUrl || "https://google.com";
+    const cust = card.customerId ? db.customers.find((c) => c.id === card.customerId) : undefined;
+    const destinationUrl = card.customDestinationUrl || cust?.googleReviewUrl || "";
+    const isLinked = Boolean(destinationUrl && destinationUrl.trim().length > 0);
 
     return {
       ...card,
       customerName: cust?.name,
       businessName: cust?.businessName,
       destinationUrl,
+      linked: isLinked,
     };
+  },
+
+  linkCard(cardId: string, data: { businessName: string; destinationUrl: string; customerName?: string }): Card {
+    const db = readDB();
+    const idUpper = cardId.trim().toUpperCase();
+    let cardIndex = db.cards.findIndex((c) => c.id.toLowerCase() === idUpper.toLowerCase());
+
+    // Find or create customer
+    let cust = db.customers.find(
+      (c) => c.businessName.toLowerCase() === data.businessName.trim().toLowerCase()
+    );
+    if (!cust) {
+      const custId = `CUST${String(db.customers.length + 1).padStart(3, "0")}`;
+      cust = {
+        id: custId,
+        name: data.customerName?.trim() || data.businessName.trim(),
+        businessName: data.businessName.trim(),
+        googleReviewUrl: data.destinationUrl.trim(),
+        createdAt: new Date().toISOString(),
+      };
+      db.customers.push(cust);
+    }
+
+    if (cardIndex === -1) {
+      const newCard: Card = {
+        id: idUpper,
+        customerId: cust.id,
+        customDestinationUrl: data.destinationUrl.trim(),
+        active: true,
+        linked: true,
+        nfcConfigured: false,
+        totalScans: 0,
+        createdAt: new Date().toISOString(),
+      };
+      db.cards.push(newCard);
+      cardIndex = db.cards.length - 1;
+    } else {
+      db.cards[cardIndex].customerId = cust.id;
+      db.cards[cardIndex].customDestinationUrl = data.destinationUrl.trim();
+      db.cards[cardIndex].linked = true;
+      db.cards[cardIndex].active = true;
+    }
+
+    writeDB(db);
+
+    return {
+      ...db.cards[cardIndex],
+      customerName: cust.name,
+      businessName: cust.businessName,
+    };
+  },
+
+  unlinkCard(cardId: string): Card | null {
+    const db = readDB();
+    const cardIndex = db.cards.findIndex((c) => c.id.toLowerCase() === cardId.toLowerCase());
+    if (cardIndex === -1) return null;
+
+    db.cards[cardIndex].linked = false;
+    db.cards[cardIndex].customDestinationUrl = "";
+    db.cards[cardIndex].customerId = undefined;
+
+    writeDB(db);
+    return db.cards[cardIndex];
   },
 
   createCard(data: { id?: string; customerId: string; customDestinationUrl?: string }): Card {
@@ -157,6 +228,7 @@ export const DB = {
       id: cardId,
       customerId: data.customerId,
       customDestinationUrl: data.customDestinationUrl?.trim() || undefined,
+      linked: Boolean(data.customDestinationUrl || data.customerId),
       active: true,
       nfcConfigured: false,
       totalScans: 0,

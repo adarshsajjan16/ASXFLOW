@@ -9,12 +9,13 @@ export interface Customer {
 }
 
 export interface Card {
-  id: string; // e.g. "ASX001"
-  customerId: string;
+  id: string; // e.g. "001", "002" or "ASX001"
+  customerId?: string;
   customerName?: string;
   businessName?: string;
-  customDestinationUrl?: string; // Optional override; defaults to customer's googleReviewUrl
-  active: boolean;
+  customDestinationUrl?: string; // Google Review URL
+  linked: boolean; // true = assigned & active, false = blank stock ready to link
+  active: boolean; // active/paused toggle
   nfcConfigured: boolean;
   totalScans: number;
   lastScannedAt?: string;
