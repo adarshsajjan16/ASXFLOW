@@ -2,7 +2,7 @@
 
 import { useEffect, useState, use, Suspense } from "react";
 import Link from "next/link";
-import { Printer, ArrowLeft, Star, Smartphone, QrCode } from "lucide-react";
+import { Printer, ArrowLeft, Download, Sparkles, QrCode } from "lucide-react";
 
 interface PrintPageProps {
   params: Promise<{ cardId: string }>;
@@ -20,8 +20,8 @@ function StandeePrintContent({ params }: PrintPageProps) {
   } | null>(null);
 
   const [qrDataUrl, setQrDataUrl] = useState<string>("");
-  const [styleTheme, setStyleTheme] = useState<"dark" | "light" | "gold">("dark");
   const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<"master-photo" | "vector">("master-photo");
 
   useEffect(() => {
     async function load() {
@@ -52,7 +52,7 @@ function StandeePrintContent({ params }: PrintPageProps) {
   return (
     <div className="flex flex-col items-center w-full">
       {/* Non-printing Control Bar */}
-      <div className="print:hidden w-full max-w-xl mb-6 bg-slate-900 border border-slate-800 p-4 rounded-2xl flex items-center justify-between shadow-xl">
+      <div className="print:hidden w-full max-w-3xl mb-6 bg-slate-900 border border-slate-800 p-4 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-xl">
         <Link
           href="/dashboard"
           className="flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white"
@@ -61,68 +61,116 @@ function StandeePrintContent({ params }: PrintPageProps) {
           <span>Back to Dashboard</span>
         </Link>
 
-        {/* Theme Selector */}
+        {/* View Mode Selector */}
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setStyleTheme("dark")}
-            className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${
-              styleTheme === "dark" ? "bg-cyan-500 text-slate-950" : "bg-slate-800 text-slate-400"
+            onClick={() => setViewMode("master-photo")}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition ${
+              viewMode === "master-photo"
+                ? "bg-amber-400 text-slate-950 shadow-md shadow-amber-400/20"
+                : "bg-slate-800 text-slate-400 hover:text-white"
             }`}
           >
-            Dark Luxe
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Master Luxury Standee (Your Design)</span>
           </button>
           <button
-            onClick={() => setStyleTheme("light")}
-            className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${
-              styleTheme === "light" ? "bg-cyan-500 text-slate-950" : "bg-slate-800 text-slate-400"
+            onClick={() => setViewMode("vector")}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+              viewMode === "vector"
+                ? "bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/20"
+                : "bg-slate-800 text-slate-400 hover:text-white"
             }`}
           >
-            Clean White
-          </button>
-          <button
-            onClick={() => setStyleTheme("gold")}
-            className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${
-              styleTheme === "gold" ? "bg-amber-400 text-slate-950" : "bg-slate-800 text-slate-400"
-            }`}
-          >
-            Gold VIP
+            Vector Vertical Card
           </button>
         </div>
 
         <button
           onClick={() => window.print()}
-          className="flex items-center gap-1.5 px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs rounded-xl shadow transition"
+          className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-amber-500/20 transition"
         >
           <Printer className="w-4 h-4" />
-          <span>Print / Save PDF</span>
+          <span>Print Acrylic Standee (Ctrl + P)</span>
         </button>
       </div>
 
       {loading ? (
         <div className="p-12 text-center text-slate-400">Loading standee layout...</div>
+      ) : viewMode === "master-photo" ? (
+        /* MODE 1: Exact Master Luxury Standee Design from User's Uploaded Photo */
+        <div className="flex flex-col items-center">
+          <div
+            id="printable-standee"
+            className="relative w-[720px] h-[480px] rounded-[28px] overflow-hidden shadow-2xl border-2 border-amber-400/30 print:shadow-none print:m-0 print:border-none select-none bg-slate-950"
+          >
+            {/* Base Master Standee Graphic */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/standee-template.jpg"
+              alt="ASXFLOW Luxury Standee Template"
+              className="w-full h-full object-cover"
+            />
+
+            {/* Dynamic Real QR Code Box Overlay */}
+            {/* Positioned exactly over the placeholder QR box in the template */}
+            <div
+              className="absolute bg-white rounded-xl shadow-xl flex items-center justify-center p-1.5 border border-slate-200"
+              style={{
+                top: "59.3%",
+                left: "55.8%",
+                width: "17.0%",
+                height: "25.2%",
+              }}
+            >
+              {qrDataUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={qrDataUrl}
+                  alt={`Live QR Code for Card ${cardId}`}
+                  className="w-full h-full object-contain"
+                />
+              ) : (
+                <QrCode className="w-8 h-8 text-slate-400 animate-spin" />
+              )}
+            </div>
+
+            {/* Bottom Bar Customization: "Provided by ASXFLOW" & Card Number */}
+            <div
+              className="absolute flex items-center justify-center text-center pointer-events-none"
+              style={{
+                top: "88.6%",
+                left: "26%",
+                width: "48%",
+                height: "6.5%",
+              }}
+            >
+              <div className="w-full h-full bg-slate-950/95 border border-amber-400/60 rounded-full flex items-center justify-center px-4 shadow-lg">
+                <span className="text-[11px] font-black uppercase tracking-wider text-amber-300 font-sans flex items-center gap-1.5">
+                  <span>Provided by ASXFLOW</span>
+                  <span className="text-amber-500 font-mono text-[10px]">● NO: {cardId}</span>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="print:hidden mt-4 text-center text-xs text-slate-400 max-w-md">
+            <p>
+              💡 <b>Print Ready:</b> Perfectly sized for standard <b>6x4 inch / A6 Landscape</b> acrylic counter standees.
+              Click <b>&quot;Print Acrylic Standee&quot;</b> to print directly on photo paper or cardstock.
+            </p>
+          </div>
+        </div>
       ) : (
-        /* Printable Acrylic Standee Card (A6 / 4x6 inch standard acrylic stand) */
-        <div
-          className={`w-[360px] h-[520px] rounded-3xl p-6 flex flex-col items-center justify-between text-center shadow-2xl relative border ${
-            styleTheme === "dark"
-              ? "bg-slate-950 text-white border-cyan-500/30"
-              : styleTheme === "light"
-              ? "bg-white text-slate-950 border-slate-300"
-              : "bg-gradient-to-b from-slate-950 via-zinc-900 to-slate-950 text-amber-200 border-amber-400/40"
-          }`}
-        >
-          {/* Top Brand Header */}
+        /* MODE 2: Clean Vertical Vector Standee */
+        <div className="w-[360px] h-[520px] rounded-3xl p-6 flex flex-col items-center justify-between text-center shadow-2xl relative border bg-slate-950 text-white border-cyan-500/30">
           <div className="w-full flex items-center justify-between border-b border-white/10 pb-3">
             <div className="flex items-center space-x-1.5">
-              <div
-                className={`w-6 h-6 rounded-md flex items-center justify-center font-black text-xs ${
-                  styleTheme === "light" ? "bg-slate-950 text-white" : "bg-cyan-400 text-slate-950"
-                }`}
-              >
+              <div className="w-6 h-6 rounded-md bg-cyan-400 text-slate-950 flex items-center justify-center font-black text-xs">
                 A
               </div>
               <span className="font-extrabold text-sm tracking-wider">
-                ASX<span className={styleTheme === "light" ? "text-cyan-600" : "text-cyan-400"}>FLOW</span>
+                ASX<span className="text-cyan-400">FLOW</span>
               </span>
             </div>
 
@@ -131,64 +179,28 @@ function StandeePrintContent({ params }: PrintPageProps) {
             </span>
           </div>
 
-          {/* Business & Review Header */}
           <div className="mt-2">
             <h2 className="text-xl font-black tracking-tight mb-1">
               {cardData?.businessName || "Your Business"}
             </h2>
-            <div className="flex items-center justify-center gap-1 my-1.5 text-amber-400">
-              {[...Array(5)].map((_, i) => (
-                <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
-              ))}
-            </div>
             <p className="text-xs uppercase tracking-widest font-bold opacity-80">
               Leave Us A Review On Google
             </p>
           </div>
 
-          {/* QR Code Container */}
           <div className="my-1.5 p-3 bg-white rounded-2xl shadow-xl relative flex items-center justify-center">
-            {qrDataUrl ? (
+            {qrDataUrl && (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={qrDataUrl}
                 alt={`QR code for ${cardId}`}
                 className="w-40 h-40 rounded-lg"
               />
-            ) : (
-              <div className="w-40 h-40 flex items-center justify-center text-slate-500">
-                <QrCode className="w-10 h-10 animate-spin" />
-              </div>
             )}
           </div>
 
-          {/* Barcode & Number Below QR (As in Reference Video) */}
-          <div className="flex flex-col items-center justify-center my-1">
-            <div className="flex items-center gap-[2px] h-5 opacity-70">
-              {[3, 1, 2, 4, 1, 3, 2, 1, 4, 2, 3, 1, 2, 4, 1, 3, 2, 1, 4].map((w, idx) => (
-                <span
-                  key={idx}
-                  className={`h-full ${styleTheme === "light" ? "bg-slate-900" : "bg-white"}`}
-                  style={{ width: `${w}px` }}
-                />
-              ))}
-            </div>
-            <div className="text-xs font-mono font-black tracking-widest mt-0.5">
-              NO: {cardId}
-            </div>
-          </div>
-
-          {/* Interaction Instruction Badge */}
-          <div className="w-full bg-white/5 border border-white/10 rounded-2xl p-2.5 flex items-center justify-center gap-2">
-            <Smartphone className="w-4 h-4 shrink-0 text-cyan-400" />
-            <span className="text-[11px] font-semibold">
-              Tap Phone Here (NFC) or Scan QR
-            </span>
-          </div>
-
-          {/* Footer Card ID */}
-          <div className="w-full text-center text-[10px] opacity-60 font-mono tracking-wide pt-2 border-t border-white/10">
-            Powered by ASXFLOW Smart Standee Platform
+          <div className="w-full text-center text-[10px] opacity-70 font-mono tracking-wide pt-2 border-t border-white/10">
+            Provided by ASXFLOW • NO: {cardId}
           </div>
         </div>
       )}

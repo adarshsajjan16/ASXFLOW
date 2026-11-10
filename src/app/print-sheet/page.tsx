@@ -138,9 +138,8 @@ function PrintSheetContent() {
               </div>
 
               {/* Tap or Scan Instruction */}
-              <div className="mt-2 text-[10px] font-semibold text-slate-600 flex items-center gap-1">
-                <Smartphone className="w-3 h-3 text-cyan-600" />
-                <span>Tap Phone (NFC) or Scan QR</span>
+              <div className="mt-1 text-[9px] font-bold text-slate-500 uppercase tracking-wider">
+                Provided by ASXFLOW
               </div>
             </div>
           ))}
