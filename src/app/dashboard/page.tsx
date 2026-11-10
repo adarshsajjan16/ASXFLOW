@@ -286,7 +286,27 @@ export default function DashboardPage() {
           </span>
         </div>
 
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-2">
+          {/* Batch A4 Print Sheet */}
+          <Link
+            href="/print-sheet"
+            target="_blank"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 text-xs text-amber-300 hover:bg-amber-400 hover:text-slate-950 transition font-medium"
+          >
+            <Printer className="w-3.5 h-3.5" />
+            <span className="hidden md:inline">Print A4 Sheet</span>
+          </Link>
+
+          {/* Export CSV */}
+          <a
+            href="/api/export-csv"
+            download
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800/80 text-xs text-slate-300 hover:text-white hover:bg-slate-700 transition font-medium"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span className="hidden md:inline">Export CSV</span>
+          </a>
+
           <button
             onClick={() => fetchDashboardData()}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800/80 text-xs text-slate-300 hover:text-white hover:bg-slate-700 transition"

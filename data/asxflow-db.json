@@ -34,8 +34,8 @@
       "customerId": "CUST001",
       "active": true,
       "nfcConfigured": true,
-      "totalScans": 50,
-      "lastScannedAt": "2026-11-10T21:02:26.645Z",
+      "totalScans": 52,
+      "lastScannedAt": "2026-11-10T21:22:58.978Z",
       "createdAt": "2026-11-03T21:01:10.048Z",
       "customDestinationUrl": "https://www.instagram.com/abhisajjann._?obrf=cms2cjlkZGd5d3R0"
     },
@@ -76,6 +76,22 @@
     }
   ],
   "scans": [
+    {
+      "id": "SCANMWB75C0Y",
+      "cardId": "ASX001",
+      "businessName": "The Grand Aroma Cafe",
+      "timestamp": "2026-11-10T21:22:58.978Z",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Antigravity/2.29.0 ",
+      "deviceType": "Desktop Browser"
+    },
+    {
+      "id": "SCANMWB73WRY",
+      "cardId": "ASX001",
+      "businessName": "The Grand Aroma Cafe",
+      "timestamp": "2026-11-10T21:21:52.558Z",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Antigravity/2.29.0 ",
+      "deviceType": "Desktop Browser"
+    },
     {
       "id": "SCANMWB6QEHX",
       "cardId": "ASX004",
