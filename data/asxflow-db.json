@@ -1,0 +1,128 @@
+{
+  "customers": [
+    {
+      "id": "CUST001",
+      "name": "Rahul Sharma",
+      "businessName": "The Grand Aroma Cafe",
+      "googleReviewUrl": "https://maps.google.com/?q=The+Grand+Aroma+Cafe",
+      "contactEmail": "rahul@grandaroma.com",
+      "contactPhone": "+91 98765 43210",
+      "createdAt": "2026-11-03T21:01:10.047Z"
+    },
+    {
+      "id": "CUST002",
+      "name": "Dr. Ananya Roy",
+      "businessName": "Apex Dental Clinic",
+      "googleReviewUrl": "https://maps.google.com/?q=Apex+Dental+Clinic",
+      "contactEmail": "clinic@apexdental.com",
+      "contactPhone": "+91 91234 56789",
+      "createdAt": "2026-11-07T21:01:10.048Z"
+    },
+    {
+      "name": "abhi",
+      "businessName": "asx company",
+      "googleReviewUrl": "https://www.instagram.com/abhisajjann._?obrf=cms2cjlkZGd5d3R0",
+      "contactEmail": "",
+      "contactPhone": "",
+      "id": "CUST003",
+      "createdAt": "2026-11-10T21:13:16.593Z"
+    }
+  ],
+  "cards": [
+    {
+      "id": "ASX001",
+      "customerId": "CUST001",
+      "active": true,
+      "nfcConfigured": true,
+      "totalScans": 50,
+      "lastScannedAt": "2026-11-10T21:02:26.645Z",
+      "createdAt": "2026-11-03T21:01:10.048Z",
+      "customDestinationUrl": "https://www.instagram.com/abhisajjann._?obrf=cms2cjlkZGd5d3R0"
+    },
+    {
+      "id": "ASX002",
+      "customerId": "CUST002",
+      "active": true,
+      "nfcConfigured": true,
+      "totalScans": 23,
+      "lastScannedAt": "2026-11-10T20:16:10.048Z",
+      "createdAt": "2026-11-07T21:01:10.048Z"
+    },
+    {
+      "id": "ASX003",
+      "customerId": "CUST001",
+      "active": true,
+      "nfcConfigured": true,
+      "totalScans": 5,
+      "lastScannedAt": "2026-11-10T19:01:10.048Z",
+      "createdAt": "2026-11-09T21:01:10.048Z"
+    },
+    {
+      "id": "ASX004",
+      "customerId": "CUST001",
+      "active": true,
+      "nfcConfigured": true,
+      "totalScans": 1,
+      "createdAt": "2026-11-10T21:11:14.990Z",
+      "lastScannedAt": "2026-11-10T21:11:22.341Z"
+    },
+    {
+      "id": "ABHI",
+      "customerId": "CUST003",
+      "active": true,
+      "nfcConfigured": true,
+      "totalScans": 0,
+      "createdAt": "2026-11-10T21:16:54.043Z"
+    }
+  ],
+  "scans": [
+    {
+      "id": "SCANMWB6QEHX",
+      "cardId": "ASX004",
+      "businessName": "The Grand Aroma Cafe",
+      "timestamp": "2026-11-10T21:11:22.341Z",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Antigravity/2.29.0 ",
+      "deviceType": "Desktop Browser"
+    },
+    {
+      "id": "SCANMWB6EX5H",
+      "cardId": "ASX001",
+      "businessName": "The Grand Aroma Cafe",
+      "timestamp": "2026-11-10T21:02:26.645Z",
+      "userAgent": "curl/8.21.0",
+      "deviceType": "Desktop Browser"
+    },
+    {
+      "id": "SCANMWB6EFYE",
+      "cardId": "ASX001",
+      "businessName": "The Grand Aroma Cafe",
+      "timestamp": "2026-11-10T21:02:04.358Z",
+      "userAgent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-IN) WindowsPowerShell/5.1.26100.9711",
+      "deviceType": "Desktop Browser"
+    },
+    {
+      "id": "SCAN001",
+      "cardId": "ASX001",
+      "businessName": "The Grand Aroma Cafe",
+      "timestamp": "2026-11-10T20:46:10.049Z",
+      "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4)",
+      "deviceType": "Mobile (iOS)"
+    },
+    {
+      "id": "SCAN002",
+      "cardId": "ASX002",
+      "businessName": "Apex Dental Clinic",
+      "timestamp": "2026-11-10T20:16:10.049Z",
+      "userAgent": "Mozilla/5.0 (Linux; Android 14; SM-S928B)",
+      "deviceType": "Mobile (Android)"
+    },
+    {
+      "id": "SCAN003",
+      "cardId": "ASX001",
+      "businessName": "The Grand Aroma Cafe",
+      "timestamp": "2026-11-10T19:31:10.049Z",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; Pixel 7)",
+      "deviceType": "Mobile (Android)"
+    }
+  ]
+}
