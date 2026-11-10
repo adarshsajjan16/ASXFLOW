@@ -65,3 +65,23 @@ export async function PATCH(req: NextRequest) {
     );
   }
 }
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json({ success: false, error: "Card id is required" }, { status: 400 });
+    }
+
+    const deleted = DB.deleteCard(id);
+    if (!deleted) {
+      return NextResponse.json({ success: false, error: "Card not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch {
+    return NextResponse.json({ success: false, error: "Failed to delete card" }, { status: 500 });
+  }
+}

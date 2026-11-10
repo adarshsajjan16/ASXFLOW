@@ -15,76 +15,42 @@ const INITIAL_DATA: DBData = {
   customers: [
     {
       id: "CUST001",
-      name: "Rahul Sharma",
-      businessName: "The Grand Aroma Cafe",
-      googleReviewUrl: "https://maps.google.com/?q=The+Grand+Aroma+Cafe",
-      contactEmail: "rahul@grandaroma.com",
-      contactPhone: "+91 98765 43210",
-      createdAt: new Date(Date.now() - 7 * 86400000).toISOString(),
-    },
-    {
-      id: "CUST002",
-      name: "Dr. Ananya Roy",
-      businessName: "Apex Dental Clinic",
-      googleReviewUrl: "https://maps.google.com/?q=Apex+Dental+Clinic",
-      contactEmail: "clinic@apexdental.com",
-      contactPhone: "+91 91234 56789",
-      createdAt: new Date(Date.now() - 3 * 86400000).toISOString(),
+      name: "abhi",
+      businessName: "asx company",
+      googleReviewUrl: "https://www.instagram.com/abhisajjann._?obrf=cms2cjlkZGd5d3R0",
+      contactEmail: "",
+      contactPhone: "",
+      createdAt: new Date().toISOString(),
     },
   ],
   cards: [
+    {
+      id: "ABHI",
+      customerId: "CUST001",
+      active: true,
+      nfcConfigured: true,
+      totalScans: 12,
+      customDestinationUrl: "https://www.instagram.com/abhisajjann._?obrf=cms2cjlkZGd5d3R0",
+      createdAt: new Date().toISOString(),
+    },
     {
       id: "ASX001",
       customerId: "CUST001",
       active: true,
       nfcConfigured: true,
-      totalScans: 48,
-      lastScannedAt: new Date(Date.now() - 15 * 60000).toISOString(),
-      createdAt: new Date(Date.now() - 7 * 86400000).toISOString(),
-    },
-    {
-      id: "ASX002",
-      customerId: "CUST002",
-      active: true,
-      nfcConfigured: true,
-      totalScans: 23,
-      lastScannedAt: new Date(Date.now() - 45 * 60000).toISOString(),
-      createdAt: new Date(Date.now() - 3 * 86400000).toISOString(),
-    },
-    {
-      id: "ASX003",
-      customerId: "CUST001",
-      active: true,
-      nfcConfigured: false,
-      totalScans: 5,
-      lastScannedAt: new Date(Date.now() - 2 * 3600000).toISOString(),
-      createdAt: new Date(Date.now() - 1 * 86400000).toISOString(),
+      totalScans: 52,
+      customDestinationUrl: "https://www.instagram.com/abhisajjann._?obrf=cms2cjlkZGd5d3R0",
+      createdAt: new Date().toISOString(),
     },
   ],
   scans: [
     {
       id: "SCAN001",
-      cardId: "ASX001",
-      businessName: "The Grand Aroma Cafe",
-      timestamp: new Date(Date.now() - 15 * 60000).toISOString(),
-      userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4)",
-      deviceType: "Mobile (iOS)",
-    },
-    {
-      id: "SCAN002",
-      cardId: "ASX002",
-      businessName: "Apex Dental Clinic",
-      timestamp: new Date(Date.now() - 45 * 60000).toISOString(),
-      userAgent: "Mozilla/5.0 (Linux; Android 14; SM-S928B)",
-      deviceType: "Mobile (Android)",
-    },
-    {
-      id: "SCAN003",
-      cardId: "ASX001",
-      businessName: "The Grand Aroma Cafe",
-      timestamp: new Date(Date.now() - 90 * 60000).toISOString(),
-      userAgent: "Mozilla/5.0 (Linux; Android 13; Pixel 7)",
-      deviceType: "Mobile (Android)",
+      cardId: "ABHI",
+      businessName: "asx company",
+      timestamp: new Date().toISOString(),
+      userAgent: "Direct Cloud verification",
+      deviceType: "Mobile",
     },
   ],
 };
@@ -256,5 +222,24 @@ export const DB = {
   getScans(): ScanRecord[] {
     const db = readDB();
     return db.scans;
+  },
+
+  deleteCustomer(id: string): boolean {
+    const db = readDB();
+    const index = db.customers.findIndex((c) => c.id === id);
+    if (index === -1) return false;
+    db.customers.splice(index, 1);
+    db.cards = db.cards.filter((card) => card.customerId !== id);
+    writeDB(db);
+    return true;
+  },
+
+  deleteCard(id: string): boolean {
+    const db = readDB();
+    const index = db.cards.findIndex((c) => c.id.toLowerCase() === id.toLowerCase());
+    if (index === -1) return false;
+    db.cards.splice(index, 1);
+    writeDB(db);
+    return true;
   },
 };

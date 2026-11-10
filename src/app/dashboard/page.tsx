@@ -18,7 +18,12 @@ import {
   Edit2,
   Check,
   X,
-  Printer
+  Printer,
+  Trash2,
+  Lock,
+  Unlock,
+  ShieldCheck,
+  KeyRound
 } from "lucide-react";
 import { Customer, Card, ScanRecord } from "@/lib/types";
 
@@ -28,6 +33,12 @@ export default function DashboardPage() {
   const [scans, setScans] = useState<ScanRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [, startTransition] = useTransition();
+
+  // Authentication State
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [passcodeInput, setPasscodeInput] = useState("");
+  const [authError, setAuthError] = useState("");
+  const [authSubmitting, setAuthSubmitting] = useState(false);
 
   // Active view tab
   const [activeTab, setActiveTab] = useState<"cards" | "customers" | "analytics">("cards");
@@ -72,8 +83,50 @@ export default function DashboardPage() {
     if (typeof window !== "undefined") {
       setOrigin(window.location.origin);
     }
-    fetchDashboardData();
+    checkAuth();
   }, []);
+
+  async function checkAuth() {
+    try {
+      const res = await fetch("/api/auth").then((r) => r.json());
+      setIsAuthenticated(res.authenticated);
+      if (res.authenticated) {
+        fetchDashboardData();
+      }
+    } catch {
+      setIsAuthenticated(false);
+    }
+  }
+
+  async function handleLogin(e: React.FormEvent) {
+    e.preventDefault();
+    setAuthSubmitting(true);
+    setAuthError("");
+    try {
+      const res = await fetch("/api/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ passcode: passcodeInput }),
+      }).then((r) => r.json());
+
+      if (res.success) {
+        setIsAuthenticated(true);
+        fetchDashboardData();
+      } else {
+        setAuthError(res.error || "Incorrect Passcode");
+      }
+    } catch {
+      setAuthError("Failed to authenticate");
+    } finally {
+      setAuthSubmitting(false);
+    }
+  }
+
+  async function handleLogout() {
+    await fetch("/api/auth", { method: "DELETE" });
+    setIsAuthenticated(false);
+    setPasscodeInput("");
+  }
 
   async function fetchDashboardData() {
     setLoading(true);
@@ -119,6 +172,8 @@ export default function DashboardPage() {
   function openNFCModal(card: Card) {
     setSelectedCardForNFC(card);
     setCopiedNfcUrl(false);
+    setNfcError("");
+    setNfcWriteSuccess(false);
   }
 
   async function toggleCardActive(card: Card) {
@@ -184,6 +239,61 @@ export default function DashboardPage() {
     }
   }
 
+  async function handleDeleteCard(cardId: string) {
+    if (!confirm(`Are you sure you want to permanently delete card ${cardId}?`)) return;
+    try {
+      const res = await fetch(`/api/cards?id=${encodeURIComponent(cardId)}`, {
+        method: "DELETE",
+      }).then((r) => r.json());
+
+      if (res.success) {
+        setCards((prev) => prev.filter((c) => c.id !== cardId));
+      }
+    } catch (err) {
+      console.error("Failed to delete card", err);
+    }
+  }
+
+  async function handleDeleteCustomer(customerId: string, bizName: string) {
+    if (!confirm(`Are you sure you want to delete "${bizName}" and all its assigned cards?`)) return;
+    try {
+      const res = await fetch(`/api/customers?id=${encodeURIComponent(customerId)}`, {
+        method: "DELETE",
+      }).then((r) => r.json());
+
+      if (res.success) {
+        setCustomers((prev) => prev.filter((c) => c.id !== customerId));
+        setCards((prev) => prev.filter((c) => c.customerId !== customerId));
+      }
+    } catch (err) {
+      console.error("Failed to delete customer", err);
+    }
+  }
+
+  async function writeDirectNFC(targetUrl: string, card: Card) {
+    if (typeof window === "undefined" || !("NDEFReader" in window)) {
+      setNfcError("Web NFC is supported in Chrome on Android. For iOS and others, please use the NFC Tools instructions below!");
+      return;
+    }
+    try {
+      setNfcWriting(true);
+      setNfcError("");
+      setNfcWriteSuccess(false);
+      // @ts-expect-error Web NFC API
+      const ndef = new window.NDEFReader();
+      await ndef.write({
+        records: [{ recordType: "url", data: targetUrl }],
+      });
+      setNfcWriteSuccess(true);
+      await toggleNfcConfigured(card);
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : "Failed to write NFC chip. Make sure NFC is enabled.";
+      setNfcError(errorMsg);
+    } finally {
+      setNfcWriting(false);
+    }
+  }
+
   async function handleCreateCustomer(e: React.FormEvent) {
     e.preventDefault();
     if (!newCustName || !newCustBiz || !newCustReviewUrl) return;
@@ -212,30 +322,6 @@ export default function DashboardPage() {
       }
     } catch (err) {
       console.error("Failed to add customer", err);
-    }
-  }
-
-  async function writeDirectNFC(targetUrl: string, card: Card) {
-    if (typeof window === "undefined" || !("NDEFReader" in window)) {
-      setNfcError("Web NFC is supported in Chrome on Android. For iOS and others, please use the NFC Tools instructions below!");
-      return;
-    }
-    try {
-      setNfcWriting(true);
-      setNfcError("");
-      setNfcWriteSuccess(false);
-      // @ts-expect-error Web NFC API
-      const ndef = new window.NDEFReader();
-      await ndef.write({
-        records: [{ recordType: "url", data: targetUrl }],
-      });
-      setNfcWriteSuccess(true);
-      await toggleNfcConfigured(card);
-    } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : "Failed to write NFC chip. Make sure NFC is enabled.";
-      setNfcError(errorMsg);
-    } finally {
-      setNfcWriting(false);
     }
   }
 
@@ -268,6 +354,83 @@ export default function DashboardPage() {
   const totalScans = cards.reduce((sum, c) => sum + (c.totalScans || 0), 0);
   const activeCardsCount = cards.filter((c) => c.active).length;
 
+  // 1. Loading screen while checking authorization
+  if (isAuthenticated === null) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center p-6">
+        <div className="text-center">
+          <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center mx-auto mb-3 animate-pulse">
+            <Lock className="w-5 h-5" />
+          </div>
+          <span className="text-sm text-slate-400">Verifying Admin Access...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // 2. Locked Screen - Only authorized user can enter
+  if (isAuthenticated === false) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-6 selection:bg-cyan-500 selection:text-slate-950">
+        <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl relative">
+          <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center mx-auto mb-5 shadow-lg">
+            <KeyRound className="w-7 h-7" />
+          </div>
+
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-black text-white">ASXFLOW Master Console</h2>
+            <p className="text-xs text-slate-400 mt-1">
+              Restricted Area. Enter your Admin Master Passcode to unlock the platform.
+            </p>
+          </div>
+
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <label className="text-xs font-semibold text-slate-300 block mb-1.5">
+                Admin Passcode / Password
+              </label>
+              <input
+                type="password"
+                placeholder="Enter passcode (e.g. asxflow2026)"
+                value={passcodeInput}
+                onChange={(e) => setPasscodeInput(e.target.value)}
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:border-cyan-500 focus:outline-none"
+                autoFocus
+                required
+              />
+            </div>
+
+            {authError && (
+              <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-400 text-center font-medium">
+                {authError}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={authSubmitting}
+              className="w-full py-3.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs transition shadow-lg shadow-cyan-500/20 flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              <ShieldCheck className="w-4 h-4" />
+              <span>{authSubmitting ? "Verifying..." : "Unlock Dashboard"}</span>
+            </button>
+          </form>
+
+          <div className="mt-6 text-center">
+            <Link href="/" className="text-xs text-slate-500 hover:text-cyan-400 transition">
+              ← Return to Home Page
+            </Link>
+          </div>
+        </div>
+
+        <p className="text-xs text-slate-600 mt-6">
+          ASXFLOW Proprietary Access Control • Encrypted Session
+        </p>
+      </div>
+    );
+  }
+
+  // 3. Authenticated Dashboard
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
       {/* Top Navigation */}
@@ -281,8 +444,8 @@ export default function DashboardPage() {
               ASX<span className="text-cyan-400">FLOW</span>
             </span>
           </Link>
-          <span className="hidden sm:inline-block px-2.5 py-0.5 rounded text-xs font-semibold bg-slate-800 text-slate-400 border border-slate-700">
-            Control Console
+          <span className="hidden sm:inline-block px-2.5 py-0.5 rounded text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            Admin Authenticated
           </span>
         </div>
 
@@ -314,12 +477,16 @@ export default function DashboardPage() {
             <RefreshCw className="w-3.5 h-3.5" />
             <span>Refresh</span>
           </button>
-          <Link
-            href="/"
-            className="text-xs text-slate-400 hover:text-cyan-400 transition"
+
+          {/* Lock / Sign Out Button */}
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-rose-500/30 bg-rose-500/10 text-xs text-rose-400 hover:bg-rose-500 hover:text-white transition font-medium"
+            title="Lock Console"
           >
-            Back to Home
-          </Link>
+            <Lock className="w-3.5 h-3.5" />
+            <span className="hidden md:inline">Lock</span>
+          </button>
         </div>
       </header>
 
@@ -589,7 +756,7 @@ export default function DashboardPage() {
                               className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-400 hover:text-slate-950 text-xs font-semibold text-amber-300 border border-amber-500/30 transition shadow-sm"
                             >
                               <Printer className="w-3.5 h-3.5" />
-                              <span>Print Standee</span>
+                              <span>Print</span>
                             </Link>
 
                             {/* QR Generator Modal Button */}
@@ -597,7 +764,7 @@ export default function DashboardPage() {
                               onClick={() => openQRModal(card)}
                               className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-cyan-500 hover:text-slate-950 text-xs font-semibold text-slate-200 border border-slate-700 transition"
                             >
-                              QR Standee
+                              QR
                             </button>
 
                             {/* NFC Payload Modal Button */}
@@ -605,7 +772,7 @@ export default function DashboardPage() {
                               onClick={() => openNFCModal(card)}
                               className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-cyan-500 hover:text-slate-950 text-xs font-semibold text-slate-200 border border-slate-700 transition"
                             >
-                              NFC Tool
+                              NFC
                             </button>
 
                             {/* Live Redirect Test */}
@@ -618,6 +785,15 @@ export default function DashboardPage() {
                             >
                               <ExternalLink className="w-3.5 h-3.5" />
                             </a>
+
+                            {/* Delete Card Button */}
+                            <button
+                              onClick={() => handleDeleteCard(card.id)}
+                              className="inline-flex items-center justify-center p-1.5 rounded-lg bg-slate-800 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 border border-slate-700 hover:border-rose-500/30 transition"
+                              title="Delete Card"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
                           </td>
                         </tr>
                       );
@@ -643,7 +819,8 @@ export default function DashboardPage() {
                       <th className="py-3.5 px-4">Owner Name</th>
                       <th className="py-3.5 px-4">Assigned Cards</th>
                       <th className="py-3.5 px-4">Contact</th>
-                      <th className="py-3.5 px-4">Default Google Review Link</th>
+                      <th className="py-3.5 px-4">Destination Link</th>
+                      <th className="py-3.5 px-4 text-right">Delete</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800/80">
@@ -686,6 +863,15 @@ export default function DashboardPage() {
                             >
                               {cust.googleReviewUrl}
                             </a>
+                          </td>
+                          <td className="py-4 px-4 text-right">
+                            <button
+                              onClick={() => handleDeleteCustomer(cust.id, cust.businessName)}
+                              className="p-1.5 rounded-lg bg-slate-800 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 border border-slate-700 hover:border-rose-500/30 transition"
+                              title="Delete Merchant"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
                           </td>
                         </tr>
                       );
