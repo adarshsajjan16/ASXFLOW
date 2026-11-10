@@ -89,31 +89,46 @@ const INITIAL_DATA: DBData = {
   ],
 };
 
+const TMP_DATA_FILE = path.join("/tmp", "asxflow-db.json");
+let memoryCache: DBData | null = null;
+
 function readDB(): DBData {
+  if (memoryCache) {
+    return memoryCache;
+  }
   try {
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
+    if (fs.existsSync(DATA_FILE)) {
+      const raw = fs.readFileSync(DATA_FILE, "utf-8");
+      memoryCache = JSON.parse(raw) as DBData;
+      return memoryCache;
     }
-    if (!fs.existsSync(DATA_FILE)) {
-      fs.writeFileSync(DATA_FILE, JSON.stringify(INITIAL_DATA, null, 2), "utf-8");
-      return INITIAL_DATA;
+    if (fs.existsSync(TMP_DATA_FILE)) {
+      const raw = fs.readFileSync(TMP_DATA_FILE, "utf-8");
+      memoryCache = JSON.parse(raw) as DBData;
+      return memoryCache;
     }
-    const raw = fs.readFileSync(DATA_FILE, "utf-8");
-    return JSON.parse(raw) as DBData;
+    memoryCache = { ...INITIAL_DATA };
+    return memoryCache;
   } catch (err) {
     console.error("Error reading database file, using fallback:", err);
-    return INITIAL_DATA;
+    memoryCache = { ...INITIAL_DATA };
+    return memoryCache;
   }
 }
 
 function writeDB(data: DBData): void {
+  memoryCache = data;
   try {
     if (!fs.existsSync(DATA_DIR)) {
       fs.mkdirSync(DATA_DIR, { recursive: true });
     }
     fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), "utf-8");
-  } catch (err) {
-    console.error("Error writing database file:", err);
+  } catch {
+    try {
+      fs.writeFileSync(TMP_DATA_FILE, JSON.stringify(data, null, 2), "utf-8");
+    } catch {
+      // Memory cache is already updated
+    }
   }
 }
 
